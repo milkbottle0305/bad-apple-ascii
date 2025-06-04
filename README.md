@@ -34,17 +34,23 @@ pnpm build
 
 ### 3. 웹 서버 실행
 
-\`\`\`bash
+```bash
 pnpm serve
+```
 
-# 또는
+또는
 
+```bash
 python3 -m http.server 8000
-\`\`\`
+```
 
 ### 4. 브라우저에서 접속
 
+브라우저에서 다음 주소로 접속:
+
+```
 http://localhost:8000
+```
 
 ## 🎮 사용법
 
@@ -55,18 +61,18 @@ http://localhost:8000
 
 ## 📁 프로젝트 구조
 
-\`\`\`
+```
 bad-apple/
 ├── src/
-│ └── main.ts # 메인 TypeScript 소스
+│   └── main.ts          # 메인 TypeScript 소스
 ├── res/
-│ └── video.mp4 # 배드애플 비디오 파일
-├── dist/ # 컴파일된 JavaScript (자동 생성)
-├── index.html # 메인 HTML 파일
-├── package.json # 프로젝트 설정
-├── tsconfig.json # TypeScript 설정
-└── .gitignore # Git 무시 파일 목록
-\`\`\`
+│   └── video.mp4        # 배드애플 비디오 파일
+├── dist/                # 컴파일된 JavaScript (자동 생성)
+├── index.html           # 메인 HTML 파일
+├── package.json         # 프로젝트 설정
+├── tsconfig.json        # TypeScript 설정
+└── .gitignore           # Git 무시 파일 목록
+```
 
 ## ⚙️ 커스터마이징
 
@@ -80,9 +86,10 @@ private frameRate: number = 10; // 원하는 fps 값으로 변경
 ### ASCII 문자 변경
 
 ASCII 아트의 밝기 표현을 변경하려면:
-\`\`\`typescript
-private asciiChars: string = " .-:=+\*#%@"; // 원하는 문자로 변경
-\`\`\`
+
+```typescript
+private asciiChars: string = " .-:=+*#%@"; // 원하는 문자로 변경
+```
 
 ### 해상도 조정
 
@@ -98,7 +105,8 @@ this.canvas.height = 80; // 세로 해상도
 
 ## 📄 라이선스
 
-이 프로젝트는 개인적인 학습 및 재미를 위해 제작되었습니다.
+이 프로젝트는 개인적인 학습 및 재미를 위해 제작되었습니다.  
+배드애플 영상의 저작권은 원작자에게 있습니다.
 
 ---
 
