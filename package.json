@@ -5,7 +5,8 @@
   "main": "index.html",
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "serve": "python3 -m http.server 8000"
   },
   "devDependencies": {
     "@types/node": "^18.19.110",
