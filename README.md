@@ -4,7 +4,7 @@
 
 ## 🎥 시연 영상
 
-https://github.com/[사용자명]/[저장소명]/raw/main/res/result.mov
+https://github.com/milkbottle0305/bad-apple-ascii/raw/main/res/result.mov
 
 > 실제 동작하는 모습을 확인해보세요! ASCII 아트로 변환된 배드애플이 오디오와 함께 재생됩니다.
 
