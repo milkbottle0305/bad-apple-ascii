@@ -1,0 +1,14 @@
+{
+  "name": "bad-apple-ascii",
+  "version": "1.0.0",
+  "description": "Bad Apple ASCII art video player",
+  "main": "index.html",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.110",
+    "typescript": "^5.8.3"
+  }
+}
