@@ -4,16 +4,73 @@ class BadApplePlayer {
   private ctx!: CanvasRenderingContext2D;
   private output!: HTMLPreElement;
   private isPlaying: boolean = false;
-  private frameRate: number = 10; // 1초에 10프레임
+  private frameRate: number = 30;
   private frameInterval: number;
+  private animationId?: number;
+  private canvasWidth: number = 120;
+  private canvasHeight: number = 80;
 
   // ASCII 문자 (밝기 순서) - 배드애플에 최적화
   private asciiChars: string = " .-:=+*#%@";
 
   constructor() {
+    this.calculateCanvasSize();
     this.setupElements();
     this.frameInterval = 1000 / this.frameRate;
     this.setupEventListeners();
+    this.setupResizeListener();
+  }
+
+  private calculateCanvasSize(): void {
+    // 화면 너비에 맞춰 ASCII 아트 크기 계산
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+
+    // 모노스페이스 폰트의 가로세로 비율 고려 (약 0.6)
+    const charAspectRatio = 0.6;
+
+    // 화면 너비에 맞는 문자 수 계산 (여백 고려)
+    const targetCharsPerLine = Math.floor(screenWidth / 8); // 8px 폰트 크기 기준
+
+    // 16:9 비율 유지하면서 높이 계산
+    const targetLines = Math.floor(
+      targetCharsPerLine * charAspectRatio * (9 / 16)
+    );
+
+    this.canvasWidth = Math.min(targetCharsPerLine, 200); // 최대 200자
+    this.canvasHeight = Math.min(targetLines, 150); // 최대 150줄
+
+    // 최소 크기 보장
+    if (this.canvasWidth < 80) this.canvasWidth = 80;
+    if (this.canvasHeight < 60) this.canvasHeight = 60;
+  }
+
+  private setupResizeListener(): void {
+    window.addEventListener("resize", () => {
+      this.calculateCanvasSize();
+      this.updateCanvasSize();
+      this.updateFontSize();
+    });
+  }
+
+  private updateCanvasSize(): void {
+    this.canvas.width = this.canvasWidth;
+    this.canvas.height = this.canvasHeight;
+  }
+
+  private updateFontSize(): void {
+    // 화면 너비에 맞는 폰트 크기 계산
+    const screenWidth = window.innerWidth;
+    const fontSize = Math.max(4, Math.min(12, screenWidth / this.canvasWidth));
+    const lineHeight = fontSize * 0.8;
+
+    this.output.style.fontSize = `${fontSize}px`;
+    this.output.style.lineHeight = `${lineHeight}px`;
+    this.output.style.width = "100vw";
+    this.output.style.height = "100vh";
+    this.output.style.display = "flex";
+    this.output.style.alignItems = "center";
+    this.output.style.justifyContent = "center";
   }
 
   private setupElements(): void {
@@ -28,8 +85,8 @@ class BadApplePlayer {
 
     // 캔버스 생성 (숨김)
     this.canvas = document.createElement("canvas");
-    this.canvas.width = 120; // ASCII 아트 가로 크기 증가
-    this.canvas.height = 80; // ASCII 아트 세로 크기 증가
+    this.canvas.width = this.canvasWidth;
+    this.canvas.height = this.canvasHeight;
     this.canvas.style.display = "none";
     this.ctx = this.canvas.getContext("2d")!;
     document.body.appendChild(this.canvas);
@@ -37,15 +94,20 @@ class BadApplePlayer {
     // ASCII 출력용 pre 엘리먼트
     this.output = document.createElement("pre");
     this.output.style.fontFamily = "monospace";
-    this.output.style.fontSize = "6px";
-    this.output.style.lineHeight = "5px";
     this.output.style.color = "white";
     this.output.style.backgroundColor = "black";
-    this.output.style.padding = "10px";
     this.output.style.margin = "0";
+    this.output.style.padding = "0";
     this.output.style.whiteSpace = "pre";
     this.output.style.overflow = "hidden";
+    this.output.style.position = "fixed";
+    this.output.style.top = "0";
+    this.output.style.left = "0";
+    this.output.style.zIndex = "1000";
     document.body.appendChild(this.output);
+
+    // 초기 폰트 크기 설정
+    this.updateFontSize();
   }
 
   private setupEventListeners(): void {
@@ -94,38 +156,57 @@ class BadApplePlayer {
     if (this.isPlaying) {
       this.isPlaying = false;
       this.video.pause();
+
+      // 애니메이션 중단
+      if (this.animationId) {
+        cancelAnimationFrame(this.animationId);
+        this.animationId = undefined;
+      }
     }
   }
 
   private startRendering(): void {
-    const render = () => {
-      if (this.isPlaying && !this.video.paused) {
-        this.renderFrame();
-        setTimeout(render, this.frameInterval);
+    let lastFrameTime = 0;
+    const targetFrameInterval = this.frameInterval;
+
+    const render = (currentTime: number) => {
+      if (!this.isPlaying || this.video.paused) {
+        return;
       }
+
+      // 첫 번째 프레임이거나 충분한 시간이 지났을 때만 렌더링
+      if (currentTime - lastFrameTime >= targetFrameInterval) {
+        this.renderFrame();
+        lastFrameTime = currentTime;
+      }
+
+      // 다음 프레임 요청 및 ID 저장
+      this.animationId = requestAnimationFrame(render);
     };
-    render();
+
+    // 첫 번째 프레임 시작
+    this.animationId = requestAnimationFrame(render);
   }
 
   private renderFrame(): void {
     // 비디오 프레임을 캔버스에 그리기
-    this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.drawImage(this.video, 0, 0, this.canvasWidth, this.canvasHeight);
 
     // 이미지 데이터 가져오기
     const imageData = this.ctx.getImageData(
       0,
       0,
-      this.canvas.width,
-      this.canvas.height
+      this.canvasWidth,
+      this.canvasHeight
     );
     const pixels = imageData.data;
 
     let asciiArt = "";
 
     // 각 픽셀을 ASCII 문자로 변환
-    for (let y = 0; y < this.canvas.height; y++) {
-      for (let x = 0; x < this.canvas.width; x++) {
-        const pixelIndex = (y * this.canvas.width + x) * 4;
+    for (let y = 0; y < this.canvasHeight; y++) {
+      for (let x = 0; x < this.canvasWidth; x++) {
+        const pixelIndex = (y * this.canvasWidth + x) * 4;
         const r = pixels[pixelIndex];
         const g = pixels[pixelIndex + 1];
         const b = pixels[pixelIndex + 2];

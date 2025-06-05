@@ -6,8 +6,15 @@ declare class BadApplePlayer {
     private isPlaying;
     private frameRate;
     private frameInterval;
+    private animationId?;
+    private canvasWidth;
+    private canvasHeight;
     private asciiChars;
     constructor();
+    private calculateCanvasSize;
+    private setupResizeListener;
+    private updateCanvasSize;
+    private updateFontSize;
     private setupElements;
     private setupEventListeners;
     private togglePlay;
