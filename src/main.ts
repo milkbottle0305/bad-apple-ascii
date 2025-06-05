@@ -4,39 +4,54 @@ class BadApplePlayer {
   private ctx!: CanvasRenderingContext2D;
   private output!: HTMLPreElement;
   private isPlaying = false;
-  private frameRate = 60;
-  private frameInterval: number;
   private animationId?: number;
   private canvasWidth = 120;
   private canvasHeight = 80;
   private asciiChars: string = " .-:=+*#%@";
+  private charWidthToHeight = 0.55;
+  private targetAspectRatio = 4 / 3;
+  private screenPadding = 0.9;
 
   constructor() {
     this.calculateCanvasSize();
     this.setupElements();
-    this.frameInterval = 1000 / this.frameRate;
     this.setupEventListeners();
     this.setupResizeListener();
   }
 
   private calculateCanvasSize(): void {
     const screenWidth = window.innerWidth;
-    const charAspectRatio = 0.6;
-    const targetCharsPerLine = Math.floor(screenWidth / 8);
-    const targetLines = Math.floor(
-      targetCharsPerLine * charAspectRatio * (9 / 16)
-    );
-    this.canvasWidth = Math.min(targetCharsPerLine, 200);
-    this.canvasHeight = Math.min(targetLines, 150);
-    if (this.canvasWidth < 80) this.canvasWidth = 80;
-    if (this.canvasHeight < 60) this.canvasHeight = 60;
+    const screenHeight = window.innerHeight;
+
+    // 4:3 비율을 위한 캔버스 비율 계산
+    const targetCanvasRatio = this.targetAspectRatio / this.charWidthToHeight;
+
+    const maxCharsWidth = Math.floor(screenWidth / 6);
+    const maxCharsHeight = Math.floor(screenHeight / 10);
+
+    let canvasWidth, canvasHeight;
+
+    if (maxCharsWidth / maxCharsHeight > targetCanvasRatio) {
+      canvasHeight = Math.min(maxCharsHeight, 100);
+      canvasWidth = Math.floor(canvasHeight * targetCanvasRatio);
+    } else {
+      canvasWidth = Math.min(maxCharsWidth, 140);
+      canvasHeight = Math.floor(canvasWidth / targetCanvasRatio);
+    }
+
+    this.canvasWidth = Math.max(80, Math.min(canvasWidth, 140));
+    this.canvasHeight = Math.max(36, Math.min(canvasHeight, 100));
   }
 
   private setupResizeListener(): void {
+    let resizeTimeout: number;
     window.addEventListener("resize", () => {
-      this.calculateCanvasSize();
-      this.updateCanvasSize();
-      this.updateFontSize();
+      clearTimeout(resizeTimeout);
+      resizeTimeout = window.setTimeout(() => {
+        this.calculateCanvasSize();
+        this.updateCanvasSize();
+        this.updateFontSize();
+      }, 100);
     });
   }
 
@@ -47,8 +62,16 @@ class BadApplePlayer {
 
   private updateFontSize(): void {
     const screenWidth = window.innerWidth;
-    const fontSize = Math.max(4, Math.min(12, screenWidth / this.canvasWidth));
-    const lineHeight = fontSize * 0.8;
+    const screenHeight = window.innerHeight;
+
+    const fontSizeByWidth =
+      (screenWidth * this.screenPadding) /
+      (this.canvasWidth * this.charWidthToHeight);
+    const fontSizeByHeight =
+      (screenHeight * this.screenPadding) / this.canvasHeight;
+    const fontSize = Math.max(4, Math.min(fontSizeByWidth, fontSizeByHeight));
+    const lineHeight = fontSize;
+
     this.output.style.fontSize = `${fontSize}px`;
     this.output.style.lineHeight = `${lineHeight}px`;
     this.output.style.width = "100vw";
@@ -134,13 +157,9 @@ class BadApplePlayer {
   }
 
   private startRendering(): void {
-    let lastFrameTime = 0;
-    const render = (currentTime: number) => {
+    const render = () => {
       if (!this.isPlaying || this.video.paused) return;
-      if (currentTime - lastFrameTime >= this.frameInterval) {
-        this.renderFrame();
-        lastFrameTime = currentTime;
-      }
+      this.renderFrame();
       this.animationId = requestAnimationFrame(render);
     };
     this.animationId = requestAnimationFrame(render);
@@ -156,6 +175,7 @@ class BadApplePlayer {
     );
     const pixels = imageData.data;
     let asciiArt = "";
+
     for (let y = 0; y < this.canvasHeight; y++) {
       for (let x = 0; x < this.canvasWidth; x++) {
         const pixelIndex = (y * this.canvasWidth + x) * 4;

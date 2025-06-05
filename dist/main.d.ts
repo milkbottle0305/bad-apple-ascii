@@ -4,12 +4,13 @@ declare class BadApplePlayer {
     private ctx;
     private output;
     private isPlaying;
-    private frameRate;
-    private frameInterval;
     private animationId?;
     private canvasWidth;
     private canvasHeight;
     private asciiChars;
+    private charWidthToHeight;
+    private targetAspectRatio;
+    private screenPadding;
     constructor();
     private calculateCanvasSize;
     private setupResizeListener;
